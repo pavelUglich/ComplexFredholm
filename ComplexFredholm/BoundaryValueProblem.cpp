@@ -37,7 +37,7 @@ void BoundaryValueProblem::SetAlpha(complex<double> _alpha) {
 }
 
 void BoundaryValueProblem::CreateTheInnerSolution(size_t points, size_t size) {
-	double h = 1 / ((double)points);
+	const double h = 1 / static_cast<double>(points);
 	InnerCauchyProblemSolution.clear();
 	for (size_t i = 0; i < points; i++) {
 		InnerCauchyProblemSolution.push_back(CauchyProblemSolutions((i + 0.5) * h, size));
@@ -67,15 +67,15 @@ complex<double> BoundaryValueProblem::NewtonMethod() {
 
 vector<complex<double>> BoundaryValueProblem::CauchyProblemSolutions(double y,
 	size_t size) const {
-	complex<double> Mu = sqrt(Parameters::muConst);
-	complex<double> kappa1 = kappa / Mu;
-	complex<double> mu = sqrt(alpha * alpha - kappa1 * kappa1);
-	complex<double> cm = cosh(mu * y);
-	complex<double> sm = sinh(mu * y);
+	const complex<double> Mu = sqrt(Parameters::muConst);
+	//const complex<double> kappa1 = kappa / Mu;
+	const complex<double> mu = sqrt(alpha * alpha - kappa * kappa / Mu);
+	const complex<double> cm = cosh(mu * y);
+	const complex<double> sm = sinh(mu * y);
 	vector<complex<double>> cauchyProblemSolution(size);
 	cauchyProblemSolution[0] = sm / mu;
 	cauchyProblemSolution[1] = cm * Parameters::muConst;
-	auto mu2 = mu * mu;
+	const auto mu2 = mu * mu;
 	if (size > 2) {
 		cauchyProblemSolution[2] = alpha / mu2 * (cm * y - sm / mu);
 		cauchyProblemSolution[3] = sm * alpha * y / mu * Parameters::muConst;

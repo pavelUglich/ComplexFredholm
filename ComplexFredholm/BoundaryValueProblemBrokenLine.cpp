@@ -1,8 +1,7 @@
 #include "BoundaryValueProblemSmooth.h"
 #include "BoundaryValueProblemBrokenLine.h"
 #include<iostream>
-BoundaryValueProblemBrokenLine::BoundaryValueProblemBrokenLine() {
-}
+BoundaryValueProblemBrokenLine::BoundaryValueProblemBrokenLine() = default;
 
 BoundaryValueProblemBrokenLine::BoundaryValueProblemBrokenLine(double kappa, complex<double> alpha, double eps) :
 	BoundaryValueProblemSmooth(kappa, alpha, eps)
@@ -10,17 +9,17 @@ BoundaryValueProblemBrokenLine::BoundaryValueProblemBrokenLine(double kappa, com
 	vector<double> rho = Parameters::rho;
 	vector<complex<double>> mu = Parameters::mu;
 	size_t size = rho.size();
-	double h = 1 / (double)size;
+	double h = 1 / static_cast<double>(size);
 	Rho = [rho, h, size](double y) {
 		if (y < h / 2)
 		{
 			return rho[0];
 		}
-		if (y > 1 - h / 2)
+		if (y >= 1 - h / 2)
 		{
 			return rho[size - 1];
 		}
-		int i = (int)((y - h / 2) / h);
+		const int i = static_cast<int>((y - h / 2) / h);
 		return rho[i] + (rho[i + 1] - rho[i]) / h * (y - (0.5 + i) * h);
 	};
 	this->Mu = [mu, h, size](double y) {
@@ -28,11 +27,11 @@ BoundaryValueProblemBrokenLine::BoundaryValueProblemBrokenLine(double kappa, com
 		{
 			return mu[0];
 		}
-		if (y > 1 - h / 2)
+		if (y >= 1 - h / 2)
 		{
 			return mu[size - 1];
 		}
-		int i = (int)((y-h/2) / h);
+		const int i = static_cast<int>((y - h / 2) / h);
 		return mu[i] + (mu[i + 1] - mu[i]) / h * (y - (0.5 + i) * h);
 	};
 }

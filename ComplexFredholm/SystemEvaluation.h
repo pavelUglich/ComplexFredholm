@@ -29,6 +29,8 @@ public:
 		EvaluateTheRightPart(double a, double b, size_t N) const;
 	vector<vector<complex<double>>> EvaluateTheKernel(double a, double b,
 		double c, double d, size_t N);
+	vector<vector<complex<double>>> EvaluateTheKernelRho(double a, double b,
+		double c, double d, size_t N);
 };
 
 
@@ -151,6 +153,36 @@ vector<vector<complex<double>>> SystemEvaluation<BVP>::EvaluateTheKernel(
 				result += (r1 + r2) * multiplier;
 			}
 			Result[j][i] = -result / static_cast<double>(N);
+		}
+	}
+	return Result;
+}
+
+template<class BVP>
+vector<vector<complex<double>>> SystemEvaluation<BVP>::EvaluateTheKernelRho(double a, double b, double c, double d, size_t N)
+{
+	complex<double> I(0, 1);
+	for (size_t i = 0; i < roots.size(); i++) roots[i].AddTheInnerSolution(N);
+	const double hx = (d - c) / static_cast<double>(N);
+	vector<vector<complex<double>>> Result(N);
+	for (size_t i = 0; i < N; i++) {
+		Result[i] = vector<complex<double>>(N);
+	}
+	for (size_t j = 0; j < N; j++) {
+		double xi = (j + 0.5) * hx;
+		for (size_t i = 0; i < N; i++) {
+			complex<double> result(0, 0);
+			for (size_t k = 0; k < roots.size(); k++) {
+				complex<double> multiplier = exp(xi * I * roots[k].Value());
+				auto a03 = roots[k].GetA03();
+				auto a13 = roots[k].GetA13();
+				auto b1 = roots[k].GetB1();
+				auto b2 = roots[k].GetB2();
+				auto r2 = I * (2.0 * a03[i] * (a13[i] - a03[i] * b2 / b1) +
+					I * xi * a03[i] * a03[i]) / b1 / b1;
+				result += r2 * multiplier;
+			}
+			Result[j][i] = { kappa * kappa * result.real() / static_cast<double>(N),0 };
 		}
 	}
 	return Result;

@@ -14,7 +14,7 @@ public:
 	BoundaryValueProblemBrokenLine(double kappa, complex<double> alpha, double eps = 0.1e-4);
 	void CreateTheInnerSolution(size_t points, size_t size = 2) override;
 
-	~BoundaryValueProblemBrokenLine();
+	~BoundaryValueProblemBrokenLine() override;
 
 };
 

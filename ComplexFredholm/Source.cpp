@@ -118,12 +118,12 @@ void plotTheWaveField(double step,
  * \param function функция
  * \return вектор
  */
-vector<complex<double>> fillUpTheVector(const size_t points, double step,
+vector<complex<double>> fillUpTheVector(size_t points, double step, 
 	const function<complex<double>(double)>& function);
 
 void setParameters(const size_t points, const double kappa, const double tau,
 	const double g, const double h, const function<complex<double>(double)>& gx,
-	const function<complex<double>(double)>& hx)
+	const function<complex<double>(double)>& hx, const function<double(double)>& rho)
 {
 	const complex<double> I(0, 1);
 	Parameters::muConst = (h + I * tau * kappa * g) / (tau * kappa * I + 1.0);
@@ -137,10 +137,7 @@ void setParameters(const size_t points, const double kappa, const double tau,
 	{
 		return (hx(t) + I * tau * kappa * gx(t)) / (tau * kappa * I + 1.0);
 	};
-	Parameters::Rho = [](double t)
-	{
-		return 1;
-	};
+	Parameters::Rho = rho;
 }
 
 
@@ -153,19 +150,25 @@ void plotTheDispersionalCurves(
 	map<double, vector<complex<double>>>& dispersionSet,
 	const string& fileName);
 
+vector<complex<double>> evaluateTheRightPartRho(const vector<complex<double>>& left, const vector<complex<double>>& right);
+
+void reEvaluateParametersRho(const vector<complex<double>>& v);
+
+void plotTheSolutionRho(size_t points, double step, const string& fileName);
+
 int main()
 {
 	setlocale(LC_ALL, "Russian");
 	const size_t points = 40;
-	const double kappa = 2.0;
-	const double tau = 0.0;
+	const double kappa = 1.0;
+	const double tau = 0.1;
 	const double g = 0.5;
 	const double h = 1.0;
 	const double rightBoundary = 0.5;
 
-	/*const auto step = rightBoundary / points;
-	setParameters(points, kappa, tau, g, h, [](double t) {return 0.5 * exp(-t); }, [](double t) {return 1.0 - 0.2 * exp(t); });
-	BoundaryValueProblem* boundary_value_problem = new BoundaryValueProblemSmooth(kappa, { 1, 0 });
+	///const auto step = rightBoundary / points;
+/*	setParameters(points, kappa, tau, g, h, [](double t) {return 0.5 * exp(-t); }, [](double t) {return 1.0 - 0.2 * exp(t); }, [](double x) {return 1.0; });
+	/*BoundaryValueProblem* boundary_value_problem = new BoundaryValueProblemSmooth(kappa, { 1, 0 });
 	const auto integrand = [=]() { return boundary_value_problem->waveField(); };
 	Integral* integral = new Integral(boundary_value_problem, integrand);
 	
@@ -174,60 +177,71 @@ int main()
 		cout << (i + 0.5) * step << endl;
 		numerical.push_back(integral->evaluate((i + 0.5) * step));
 	}
-	delete boundary_value_problem;
-	const auto systemEvaluationSmooth = new SystemEvaluation<BoundaryValueProblemSmooth>(kappa, points);	
+	delete boundary_value_problem;*/
+/*	const auto systemEvaluationSmooth = new SystemEvaluation<BoundaryValueProblemSmooth>(kappa, points);	
 	const vector<complex<double>> fieldObserved = systemEvaluationSmooth->EvaluateTheRightPart(0, rightBoundary, points);
-	plotTheWaveField(step, { {"black", numerical}, {"blue", fieldObserved} }, "wavefield.txt");
+	//plotTheWaveField(step, { {"black", numerical}, {"blue", fieldObserved} }, "wavefield.txt");
 
 	
 	auto dispSet = dispersionalSet(points, 10, h, tau, g, [](double t) { return 0.5 * exp(-t); },
 	                               [](double t) { return 1.0 + 0.2 * t; });
-	plotTheDispersionalCurves(dispSet, "dispSet.txt");*/
+	plotTheDispersionalCurves(dispSet, "dispSet.txt");//*/
 	//setParameters(points, kappa, tau, g, h, [](double t) {return 0.5*exp(-t); }, [](double t) {return 1.0 + 0.4 * sin(Pi*t); });
-	setParameters(points, kappa, tau, g, h, [](double t) {return 0.5 * exp(-t); }, [](double t) {return 1 + 0.5 * sin(Pi * t); });
+	setParameters(points, kappa, tau, g, h, [](double t) {return 0.5 * exp(-t); },
+		[](double t) {return 1 + 0.5 * sin(Pi * t); }, [](auto x) {return exp(-0.5*x); });
 
 	const double step = 1.0 / points;
+
+	// точное решение задачи
 	auto exactSolution = fillUpTheVector(points, step, Parameters::Mu);
 
-	auto systemEvaluation = new SystemEvaluation<BoundaryValueProblem>(kappa, points);
-	auto Matrix = systemEvaluation->EvaluateTheKernel(0, 1, 0, 1, points);
-	const auto fieldHomogeneous = systemEvaluation->EvaluateTheRightPart(0, 1, points);
+	// объект для построения системы и правой части для постоянного нулевого начального приближения
+	SystemEvaluation<BoundaryValueProblem> systemEvaluation = { kappa, points };
+	auto Matrix = systemEvaluation.EvaluateTheKernel(0, 1, 0, 1, points);
+	const auto fieldHomogeneous = systemEvaluation.EvaluateTheRightPart(0, 1, points);
 
-	SystemEvaluation<BoundaryValueProblemSmooth>* systemEvaluationSmooth = new SystemEvaluation<
-		BoundaryValueProblemSmooth>(systemEvaluation->getRoots(), kappa, points);
-	const vector<complex<double>> fieldObserved = systemEvaluationSmooth->EvaluateTheRightPart(0, 1, points);
-	delete systemEvaluation;
-
+	// создаём новый объект для отыскания наблюдаемого поля перемещений и построения правой части
+	const SystemEvaluation<BoundaryValueProblemSmooth> systemEvaluationSmooth = { kappa, points };
+	const vector<complex<double>> fieldObserved = systemEvaluationSmooth.EvaluateTheRightPart(0, 1, points);
 	vector<complex<double>> rightPart = evaluateTheRightPart(fieldHomogeneous, fieldObserved);
+	cout << endl << Norma(rightPart) << endl;
+
 	auto solution = theFirstStep(Matrix, rightPart, step);
 	reEvaluateParameters(solution);
-	SystemEvaluation<BoundaryValueProblemBrokenLine>* systemEvaluationBroken = new SystemEvaluation<
-		BoundaryValueProblemBrokenLine>(systemEvaluationSmooth->getRoots(), kappa, points);
-	delete systemEvaluationSmooth;
-	Matrix = systemEvaluationBroken->EvaluateTheKernel(0, 1, 0, 1, points);
-	auto fieldCalculated = systemEvaluationBroken->EvaluateTheRightPart(0, 1, points);
-	rightPart = evaluateTheRightPart(fieldCalculated, fieldObserved);
+	//reEvaluateParametersRho(solution);
+
+	SystemEvaluation<BoundaryValueProblemBrokenLine> systemEvaluationBroken = { systemEvaluationSmooth.getRoots(), kappa, points };
+	Matrix = systemEvaluationBroken.EvaluateTheKernelRho(0, 1, 0, 1, points); 	
+	auto fieldCalculated = systemEvaluationBroken.EvaluateTheRightPart(0, 1, points);
+	rightPart = evaluateTheRightPartRho(fieldCalculated, fieldObserved);
 	cout << endl << Norma(rightPart) << endl;
+	solution = theFirstStep(Matrix, rightPart, step);
+	reEvaluateParametersRho(solution);
 	double nz;
 	int iterations = 0;
 	do
-	{
+	{		
+		systemEvaluationBroken = { systemEvaluationBroken.getRoots(), kappa, points };
+		Matrix = systemEvaluationBroken.EvaluateTheKernel(0, 1, 0, 1, points);
+		fieldCalculated = systemEvaluationBroken.EvaluateTheRightPart(0, 1, points);
+		rightPart = evaluateTheRightPart(fieldCalculated, fieldObserved);
+		cout << endl << Norma(rightPart) << endl;
 		solution = theFirstStep(Matrix, rightPart, step);
 		reEvaluateParameters(solution);
-		auto roots = systemEvaluationBroken->getRoots();
-		delete systemEvaluationBroken;
-		systemEvaluationBroken = new SystemEvaluation<BoundaryValueProblemBrokenLine>(
-			roots, kappa, points);
-		fieldCalculated = systemEvaluationBroken->EvaluateTheRightPart(0, 1, points);
-		Matrix = systemEvaluationBroken->EvaluateTheKernel(0, 1, 0, 1, points);
-		rightPart = evaluateTheRightPart(fieldCalculated, fieldObserved);
+				
+		systemEvaluationBroken = { systemEvaluationBroken.getRoots(), kappa, points };
+		Matrix = systemEvaluationBroken.EvaluateTheKernelRho(0, 1, 0, 1, points);
+		fieldCalculated = systemEvaluationBroken.EvaluateTheRightPart(0, 1, points);
+		rightPart = evaluateTheRightPartRho(fieldCalculated, fieldObserved);
+		solution = theFirstStep(Matrix, rightPart, step);
+		reEvaluateParametersRho(solution);		
 		nz = Norma(rightPart);
 		cout << endl << nz << " " << ++iterations << endl;
 	}
-	while (nz > 0.05e-3 && iterations < 50);
-	delete systemEvaluationBroken;
+	while (nz > 0.1e-3 && iterations < 10);
 	plotTheWaveField(step, fieldHomogeneous, fieldCalculated, fieldObserved, "wavefield.txt");
-	plotTheSolution(points, step, "solution.txt");
+	plotTheSolution(points, step, "solution.txt");//*/
+	plotTheSolutionRho(points, step, "solution1.txt");//*/
 	system("pause");
 	return 0;
 }
@@ -265,6 +279,18 @@ void showVector(double step,
 	}
 }
 
+void showVector(double step,
+                const std::vector<double>& vec,
+                ostream& stream)
+{
+	for (size_t i = 0; i < vec.size(); i++)
+	{
+		const auto x = (i + 0.5) * step;
+		stream << "(" << x << ", " << vec[i] << ") ";
+	}
+}
+
+
 void plotTheSolution(size_t points, double step, const std::string& fileName)
 {
 	ofstream stream(fileName);
@@ -297,7 +323,7 @@ vector<complex<double>> theFirstStep(
 {
 	const VoyevodinMethod voyevodinMethod(Matrix, rightPart, step, 
 		Dirichle, Dirichle, 2, 0.1e-3, 0, 0, 
-		0.1e-6);
+		0.1e-5);
 	return voyevodinMethod.solution();
 }
 
@@ -389,17 +415,17 @@ map<double, vector<complex<double>>> dispersionalSet(size_t points,
 {
 	map<double, vector<complex<double>>> result;
 	double kappa = 0.1;
-	const double step = 0.1;
-	setParameters(points, kappa, tau, g, h, gx, hx);
+	setParameters(points, kappa, tau, g, h, gx, hx, [] (double x) {return 1.0; });
 	auto system_evaluation = new SystemEvaluation<BoundaryValueProblemSmooth>
 		(kappa, points);
 	auto roots = system_evaluation->getRoots();
 	while (kappa < theHighestFrequency)
 	{
+		const double step = 0.1;
 		cout << kappa << endl;
 		result[kappa] = roots;
 		kappa += step;
-		setParameters(points, kappa, tau, g, h, gx, hx);
+		setParameters(points, kappa, tau, g, h, gx, hx, []( auto x ) {return 1; });
 		delete system_evaluation;
 		system_evaluation = new SystemEvaluation<BoundaryValueProblemSmooth>(roots, kappa, points);
 		roots = system_evaluation->getRoots();
@@ -439,4 +465,41 @@ void plotTheDispersionalCurves(
 	os << "\\end{axis}\n";
 	os << "\\end{tikzpicture}\n";
 	os.close();
+}
+
+vector<complex<double>> evaluateTheRightPartRho(const vector<complex<double>>& left, const vector<complex<double>>& right)
+{
+	assert(left.size() == right.size());
+	vector<complex<double>> result(left.size());
+	for (size_t i = 0; i < left.size(); i++)
+	{
+		result[i] = { (right[i] - left[i]).real(),0 };
+	}
+	return result;
+}
+
+void reEvaluateParametersRho(const vector<complex<double>>& v)
+{
+	assert(Parameters::rho.size() == v.size());
+	for (size_t i = 0; i < v.size(); i++)
+	{
+		Parameters::rho[i] += v[i].real();
+	}
+}
+
+void plotTheSolutionRho(size_t points, double step, const string& fileName)
+{
+	ofstream stream(fileName);
+	stream << "\\begin{tikzpicture}[scale=1.5]\n";
+	stream << "\\begin{axis}[grid]\n";
+	stream << "		\\addplot[smooth, mark = *, blue] plot coordinates{\n";
+	showVector(points, step, Parameters::Rho, [](auto x) { return x.real(); }, stream);
+	stream << "					};\n";
+	stream << "		\\addplot[line width = 0.25mm, smooth, black] plot coordinates{\n";
+	showVector(step, Parameters::rho, stream);
+	stream << "					};\n";
+	stream << "\\end{axis}\n";
+	stream << "\\end{tikzpicture}\n";
+	stream.close();
+
 }

@@ -101,11 +101,11 @@ double /*BoundaryValueProblemSmooth::*/Norma(const vector<complex<double>> & v) 
 void BoundaryValueProblemSmooth::InitializeTheSystem() {
 	EquationsSystem = {
 		[this](complex<double> kappa, double t, complex<double> alpha, const vector<complex<double>> & vec) { return vec[1] / Mu(t); },
-		[this](complex<double> kappa, double t, complex<double> alpha, const vector<complex<double>> & vec) { return vec[0] *(alpha*alpha*  Mu(t) - kappa * kappa); },
+		[this](complex<double> kappa, double t, complex<double> alpha, const vector<complex<double>> & vec) { return vec[0] *(alpha*alpha*  Mu(t) - kappa * kappa * Rho(t)); },
 		[this](complex<double> kappa, double t, complex<double> alpha, const vector<complex<double>> & vec) { return vec[3] / Mu(t); },
-		[this](complex<double> kappa, double t, complex<double> alpha, const vector<complex<double>> & vec) { return vec[0] * Mu(t)*2.0*alpha + vec[2] * (alpha*alpha* Mu(t) - kappa * kappa); },
+		[this](complex<double> kappa, double t, complex<double> alpha, const vector<complex<double>> & vec) { return vec[0] * Mu(t)*2.0*alpha + vec[2] * (alpha*alpha* Mu(t) - kappa * kappa * Rho(t)); },
 		[this](complex<double> kappa, double t, complex<double> alpha, const vector<complex<double>> & vec) { return vec[5] / Mu(t); },
-		[this](complex<double> kappa, double t, complex<double> alpha, const vector<complex<double>> & vec) { return vec[0] * Mu(t)*2.0 + vec[2] * Mu(t)*4.0*alpha + vec[4] * (alpha*alpha* Mu(t) - kappa * kappa); }
+		[this](complex<double> kappa, double t, complex<double> alpha, const vector<complex<double>> & vec) { return vec[0] * Mu(t)*2.0 + vec[2] * Mu(t)*4.0*alpha + vec[4] * (alpha*alpha* Mu(t) - kappa * kappa * Rho(t)); }
 	};
 }
 
