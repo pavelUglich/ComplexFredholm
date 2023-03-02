@@ -78,7 +78,7 @@ void plotTheSolution(size_t points, double step, const std::string& fileName);
  * \param step шаг разбиентя
  * \return вектор решения
  */
-vector<complex<double>> theFirstStep(const vector<vector<complex<double>>>& Matrix,
+vector<complex<double>> theFirstStep(const vector<vector<complex<double>>>& _matrix,
 	const vector<complex<double>>& rightPart, double step);
 
 /**
@@ -361,10 +361,10 @@ void plotTheSolution(size_t points, double step, const std::string& fileName)
 }
 
 vector<complex<double>> theFirstStep(
-	const vector<vector<complex<double>>>& Matrix, 
+	const vector<vector<complex<double>>>& _matrix, 
 	const vector<complex<double>>& rightPart, double step)
 {
-	const voyevodin_method voyevodinMethod(Matrix, rightPart, step, 
+	const voyevodin_method voyevodinMethod(_matrix, rightPart, step, 
 		Dirichle, Dirichle, 2, 0.1e-3, 0, 0, 
 		0.1e-5);
 	return voyevodinMethod.solution();

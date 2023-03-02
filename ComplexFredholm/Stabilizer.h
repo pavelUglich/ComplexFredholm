@@ -5,7 +5,7 @@ using namespace std;
 enum BoundaryCondition { Dirichle, Neumann };
 
 
-class Stabilizer
+class stabilizer
 {
 	///–азмер матрицы стабилизатора
 	size_t size;
@@ -18,23 +18,12 @@ class Stabilizer
 
 public:
 	///конструкторы
-	Stabilizer();
+	stabilizer();
 
-	Stabilizer(size_t n, double step, double p, BoundaryCondition Left = Neumann, BoundaryCondition Right = Neumann) :size(n) {
-		Diagonal = vector<double>(size);
-		UpDiagonal = vector<double>(size - 1);
-		double hStab = p / step / step;
-		for (size_t i = 0; i < size; i++)  Diagonal[i] = 1 + 2 * hStab;
-		for (size_t i = 0; i < size - 1; i++)  UpDiagonal[i] = -hStab;
-		if (Left == Dirichle) Diagonal[0] = 1 + 3 * hStab;
-		else Diagonal[0] = 1 + hStab;
-		if (Right == Dirichle) Diagonal[size - 1] = 1 + 3 * hStab;
-		else Diagonal[size - 1] = 1 + hStab;
-		SquareRoot();
-	};
+	stabilizer(size_t n, double step, double p, BoundaryCondition Left = Neumann, BoundaryCondition Right = Neumann);;
 	//~Stabilizer();
-	vector<double> diagonal() { return Diagonal; }
-	vector<double> Updiagonal() { return UpDiagonal; }
+	vector<double> diagonal() const;
+	vector<double> up_diagonal() const;
 };
 
 

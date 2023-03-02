@@ -7,7 +7,7 @@ using namespace std;
 
 class voyevodin_method
 {
-	double AlphaInitialValue;//Начальное значение параметра регуляризации
+	double _alpha_initial_value;//Начальное значение параметра регуляризации
 	double step; //длина отрезка разбиения
 	double eps;//Погрешность определения параметра регуляризации
 	double h; //Погрешность оператора
@@ -44,7 +44,7 @@ public:
 		double H = 0,
 		double Delta = 0,
 		double eps = 0.1e-11) :
-		RightPart(rightpart), step(Step), AlphaInitialValue(alphaInitialValue), h(H), delta(Delta), eps(eps) {
+		RightPart(rightpart), step(Step), _alpha_initial_value(alphaInitialValue), h(H), delta(Delta), eps(eps) {
 		//1. Создаём систему и приводим её к двухдиагональному виду
 		matrix_system ms = { matrix, RightPart, step, p, Left, Right };
 		//2. Запускаем итерационный процесс
@@ -52,17 +52,16 @@ public:
 			ms.Diagonal(),
 			ms.UpDiagonal(),
 			ms.rightPart(),
-			ms.MultiplyQtu(RightPart),
-			AlphaInitialValue, step, h,	delta,	eps };
+			ms.multiply_qtu(RightPart),
+			_alpha_initial_value, step, h,	delta,	eps };
 		//3. Получаем решение
 		Solution = iterativeProcess.solution();
 		//4. Возвращаемя к изначальным неизвестнымю
-		ms.multiply_Rtx(Solution);
-		ms.multiply_Sinv(Solution);
+		ms.multiply_rtx(Solution);
+		ms.multiply_sinv(Solution);
 	};
 
 
-	~voyevodin_method();
 	vector<complex<double>> solution() const {
 		return Solution;
 	};
