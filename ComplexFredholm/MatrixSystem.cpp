@@ -23,7 +23,7 @@ complex<double> innerprod(const vector<complex<double>> & a,
 	return sum;
 }
 
-vector<complex<double>> MatrixSystem::MultiplyQtu(
+vector<complex<double>> matrix_system::MultiplyQtu(
 	const vector<complex<double>> & v)
 {
 	auto Qtu = v;
@@ -41,7 +41,7 @@ vector<complex<double>> MatrixSystem::MultiplyQtu(
 ///<summary>
 ///Умножение справа на матрицу, обратную к матрице стабилизатора 
 ///</summary>
-void MatrixSystem::multiply_ASinv()
+void matrix_system::multiply_ASinv()
 {
 	auto Diagonal = stabilizer.diagonal();
 	auto UpDiagonal = stabilizer.Updiagonal();
@@ -57,7 +57,7 @@ void MatrixSystem::multiply_ASinv()
 ///Умножение слева на матрицу отражения
 ///</summary>
 ///<param name="k">k - номер столбца</param>
-complex<double> MatrixSystem::DelCol(size_t k)
+complex<double> matrix_system::DelCol(size_t k)
 {
 	size_t l = size - k;
 	vector<complex<double>> av(l);
@@ -85,7 +85,7 @@ complex<double> MatrixSystem::DelCol(size_t k)
 ///Умножение справа на матрицу отражения
 ///</summary>
 ///<param name="k">k - номер строки</param>
-complex<double> MatrixSystem::DelRow(size_t k)
+complex<double> matrix_system::DelRow(size_t k)
 {
 	size_t l = size - k - 1;
 	vector<complex<double>> av(l);
@@ -110,7 +110,7 @@ complex<double> MatrixSystem::DelRow(size_t k)
 ///<summary>
 ///Проеобразование правой части, умножение на транспонированную матрицу СЛАУ;
 ///</summary>
-void MatrixSystem::MultiplyTransposeAu()
+void matrix_system::MultiplyTransposeAu()
 {
 	vector<complex<double>> v(size);
 	for (size_t i = 0; i < size; i++) {
@@ -124,7 +124,7 @@ void MatrixSystem::MultiplyTransposeAu()
 ///<summary>
 ///Сведение матрицы СЛАУ к двухдиагональному виду
 ///</summary>
-void MatrixSystem::QPR()
+void matrix_system::QPR()
 {
 	p1.resize(size);
 	p2.resize(size);
@@ -142,7 +142,7 @@ void MatrixSystem::QPR()
 ///<summary>
 ///Умножение вектора правой части на матрицу, обратную к ортогональной матрице R;
 ///</summary>
-void MatrixSystem::multiply_Rx()
+void matrix_system::multiply_Rx()
 {
 	for (size_t i = 0; i < size - 1; i++) {
 		vector<complex<double>> av(size);
@@ -159,7 +159,7 @@ void MatrixSystem::multiply_Rx()
 ///Умножение вектора u на матрицу, обратную к ортогональной матрице R;
 ///</summary>
 ///<param name="u">вектор правой части</param>
-void MatrixSystem::multiply_Rtx(vector<complex<double>> &u) {
+void matrix_system::multiply_Rtx(vector<complex<double>> &u) {
 	auto v = u;
 	for (size_t i = 0; i < size; i++) {
 		size_t l = size - i;
@@ -179,7 +179,7 @@ void MatrixSystem::multiply_Rtx(vector<complex<double>> &u) {
 ///Умножение вектора u на матрицу, обратную к матрице стабилизатора;
 ///</summary>
 ///<param name="u">вектор правой части</param>
-void MatrixSystem::multiply_Sinv(vector<complex<double>>& u) {
+void matrix_system::multiply_Sinv(vector<complex<double>>& u) {
 	auto Diagonal = stabilizer.diagonal();
 	auto UpDiagonal = stabilizer.Updiagonal();
 	auto x = u;

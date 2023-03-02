@@ -1,5 +1,5 @@
 #include "VoyevodinMethod.h"
 
-VoyevodinMethod::~VoyevodinMethod()
+voyevodin_method::~voyevodin_method()
 {
 }

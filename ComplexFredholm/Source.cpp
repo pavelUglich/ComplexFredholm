@@ -11,6 +11,10 @@
 #include"Stabilizer.h"
 #include <map>
 #include "Integral.h"
+#include"vector_ops.h"
+#include<functional>
+
+const double pi = 2.0 * asin(1.0);
 
 using namespace std;
 
@@ -160,19 +164,19 @@ int main()
 {
 	setlocale(LC_ALL, "Russian");
 
-	const size_t size_kappa = 20;
+	const size_t size_kappa = 10;
 	const size_t size_gamma = 20;
 	const size_t size_s = 20; // ךמכטקוסעגמ סעמכבצמג
 	const double h_kappa = 1.0 / size_kappa;
 	const double h_gamma = 1.0 / size_gamma;
 	const double h_s = 1.0 / size_s;
 
-	std::vector<std::vector<double>> matrix(size_kappa);
+	std::vector<std::vector<complex<double>>> matrix(size_kappa);
 	const std::function<double(double, double)> kernel = [](auto x, auto s) {return 1.0 / (1 + 10 * (x - s) * (x - s)); };
 	const std::function<double(double)> exact_solution = [](auto s) {return sin(pi * s); };
 	for (size_t i = 0; i < size_kappa; i++)
 	{
-		std::vector<double> row(size_s);
+		std::vector<complex<double>> row(size_s);
 		const double x = (i + 0.5) * h_kappa;
 		for (size_t ii = 0; ii < size_s; ii++)
 		{
@@ -190,8 +194,8 @@ int main()
 	}
 
 	const auto right_part = matrix * exact;
-	VoyevodinMethod voyevodin_method = { matrix, right_part, h_kappa, Dirichle, Dirichle };
-	const auto solution = voyevodin_method.solution();
+	voyevodin_method vm = { matrix, right_part , h_s, Dirichle, Dirichle };
+	const auto solution = vm.solution();
 
 
 	/*
@@ -360,7 +364,7 @@ vector<complex<double>> theFirstStep(
 	const vector<vector<complex<double>>>& Matrix, 
 	const vector<complex<double>>& rightPart, double step)
 {
-	const VoyevodinMethod voyevodinMethod(Matrix, rightPart, step, 
+	const voyevodin_method voyevodinMethod(Matrix, rightPart, step, 
 		Dirichle, Dirichle, 2, 0.1e-3, 0, 0, 
 		0.1e-5);
 	return voyevodinMethod.solution();

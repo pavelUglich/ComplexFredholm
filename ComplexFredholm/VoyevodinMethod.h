@@ -5,7 +5,7 @@
 //#include "Stabilizer.h"
 using namespace std;
 
-class VoyevodinMethod
+class voyevodin_method
 {
 	double AlphaInitialValue;//Начальное значение параметра регуляризации
 	double step; //длина отрезка разбиения
@@ -13,11 +13,13 @@ class VoyevodinMethod
 	double h; //Погрешность оператора
 	double delta;//Погрешность правой части
 	vector<complex<double>> RightPart, p1, p2, Qtu;
-	size_t size;
+	//size_t size;
+	size_t _rows;
+	size_t _columns;
 	vector<complex<double>> Solution;
 
 public:
-	VoyevodinMethod();
+	//voyevodin_method();
 
 	/// <summary>
 	/// Конструктор метода Воеводина
@@ -32,7 +34,7 @@ public:
 	/// <param name="H">Погрешность оператора;</param>
 	/// <param name="Delta">Погрешность правой части;</param>
 	/// <param name="eps">Погрешность определения параметра регуляризации;</param>
-	VoyevodinMethod(const vector<vector<complex<double>>> & matrix,
+	voyevodin_method(const vector<vector<complex<double>>> & matrix,
 		const vector<complex<double>> & rightpart,
 		double Step,
 		BoundaryCondition Left = Neumann,
@@ -44,26 +46,23 @@ public:
 		double eps = 0.1e-11) :
 		RightPart(rightpart), step(Step), AlphaInitialValue(alphaInitialValue), h(H), delta(Delta), eps(eps) {
 		//1. Создаём систему и приводим её к двухдиагональному виду
-		size = RightPart.size();
-		MatrixSystem *matrixSystem = new MatrixSystem(matrix, RightPart, step, p, Left, Right);
+		matrix_system ms = { matrix, RightPart, step, p, Left, Right };
 		//2. Запускаем итерационный процесс
-		IterativeProcess *iterativeProcess = new IterativeProcess(
-			matrixSystem->Diagonal(),
-			matrixSystem->UpDiagonal(),
-			matrixSystem->rightPart(),
-			matrixSystem->MultiplyQtu(RightPart),
-			AlphaInitialValue, step, h,	delta,	eps);
+		IterativeProcess iterativeProcess = {
+			ms.Diagonal(),
+			ms.UpDiagonal(),
+			ms.rightPart(),
+			ms.MultiplyQtu(RightPart),
+			AlphaInitialValue, step, h,	delta,	eps };
 		//3. Получаем решение
-		Solution = iterativeProcess->solution();
-		delete iterativeProcess;
+		Solution = iterativeProcess.solution();
 		//4. Возвращаемя к изначальным неизвестнымю
-		matrixSystem->multiply_Rtx(Solution);
-		matrixSystem->multiply_Sinv(Solution);
-		delete matrixSystem;
+		ms.multiply_Rtx(Solution);
+		ms.multiply_Sinv(Solution);
 	};
 
 
-	~VoyevodinMethod();
+	~voyevodin_method();
 	vector<complex<double>> solution() const {
 		return Solution;
 	};

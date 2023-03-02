@@ -6,7 +6,7 @@
 using namespace std;
 
 double norm(const vector<complex<double>> & v);
-class MatrixSystem
+class matrix_system
 {
 	size_t size;
 	vector<vector<complex<double>>> Matrix;
@@ -26,7 +26,7 @@ class MatrixSystem
 
 public:
 	//MatrixSystem();
-	MatrixSystem(
+	matrix_system(
 		const vector<vector<complex<double>>> & A,
 		const vector<complex<double>> & b,
 		double step,
