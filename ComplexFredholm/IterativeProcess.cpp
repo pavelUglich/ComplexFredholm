@@ -65,11 +65,3 @@ void IterativeProcess::tridiag() {
 }
 
 
-/*IterativeProcess::IterativeProcess()
-{
-}
-
-
-IterativeProcess::~IterativeProcess()
-{
-}*/
