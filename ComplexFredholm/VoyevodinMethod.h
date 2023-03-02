@@ -44,7 +44,8 @@ public:
 		double H = 0,
 		double Delta = 0,
 		double eps = 0.1e-11) :
-		RightPart(rightpart), step(Step), _alpha_initial_value(alphaInitialValue), h(H), delta(Delta), eps(eps) {
+		RightPart(rightpart), step(Step), _alpha_initial_value(alphaInitialValue), 
+		h(H), delta(Delta), eps(eps) {
 		//1. Создаём систему и приводим её к двухдиагональному виду
 		matrix_system ms = { matrix, RightPart, step, p, Left, Right };
 		//2. Запускаем итерационный процесс

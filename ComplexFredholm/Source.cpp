@@ -194,7 +194,7 @@ int main()
 	}
 
 	const auto right_part = matrix * exact;
-	voyevodin_method vm = { matrix, right_part , h_s, Dirichle, Dirichle };
+	voyevodin_method vm = { matrix, right_part, h_s, Dirichle, Dirichle };
 	const auto solution = vm.solution();
 
 
