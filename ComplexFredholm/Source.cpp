@@ -159,6 +159,42 @@ void plotTheSolutionRho(size_t points, double step, const string& fileName);
 int main()
 {
 	setlocale(LC_ALL, "Russian");
+
+	const size_t size_kappa = 20;
+	const size_t size_gamma = 20;
+	const size_t size_s = 20; // количество столбцов
+	const double h_kappa = 1.0 / size_kappa;
+	const double h_gamma = 1.0 / size_gamma;
+	const double h_s = 1.0 / size_s;
+
+	std::vector<std::vector<double>> matrix(size_kappa);
+	const std::function<double(double, double)> kernel = [](auto x, auto s) {return 1.0 / (1 + 10 * (x - s) * (x - s)); };
+	const std::function<double(double)> exact_solution = [](auto s) {return sin(pi * s); };
+	for (size_t i = 0; i < size_kappa; i++)
+	{
+		std::vector<double> row(size_s);
+		const double x = (i + 0.5) * h_kappa;
+		for (size_t ii = 0; ii < size_s; ii++)
+		{
+			const double s = (ii + 0.5) * h_s;
+			row[ii] = h_s * kernel(x, s);
+		}
+		matrix[i] = row;
+	}
+
+	std::vector<double> exact(size_s);
+	for (size_t i = 0; i < size_s; i++)
+	{
+		const double s = (i + 0.5) * h_s;
+		exact[i] = exact_solution(s);
+	}
+
+	const auto right_part = matrix * exact;
+	VoyevodinMethod voyevodin_method = { matrix, right_part, h_kappa, Dirichle, Dirichle };
+	const auto solution = voyevodin_method.solution();
+
+
+	/*
 	const size_t points = 40;
 	const double kappa = 1.0;
 	const double tau = 0.1;
@@ -167,6 +203,7 @@ int main()
 	const double rightBoundary = 0.5;
 
 	///const auto step = rightBoundary / points;
+	// дисперсионные кривые
 /*	setParameters(points, kappa, tau, g, h, [](double t) {return 0.5 * exp(-t); }, [](double t) {return 1.0 - 0.2 * exp(t); }, [](double x) {return 1.0; });
 	/*BoundaryValueProblem* boundary_value_problem = new BoundaryValueProblemSmooth(kappa, { 1, 0 });
 	const auto integrand = [=]() { return boundary_value_problem->waveField(); };
@@ -187,6 +224,8 @@ int main()
 	                               [](double t) { return 1.0 + 0.2 * t; });
 	plotTheDispersionalCurves(dispSet, "dispSet.txt");//*/
 	//setParameters(points, kappa, tau, g, h, [](double t) {return 0.5*exp(-t); }, [](double t) {return 1.0 + 0.4 * sin(Pi*t); });
+	// решение обратной задачи
+	/*
 	setParameters(points, kappa, tau, g, h, [](double t) {return 0.5 * exp(-t); },
 		[](double t) {return 1 + 0.5 * sin(Pi * t); }, [](auto x) {return exp(-0.5*x); });
 
@@ -240,7 +279,7 @@ int main()
 	}
 	while (nz > 0.1e-3 && iterations < 10);
 	plotTheWaveField(step, fieldHomogeneous, fieldCalculated, fieldObserved, "wavefield.txt");
-	plotTheSolution(points, step, "solution.txt");//*/
+	plotTheSolution(points, step, "solution.txt");//
 	plotTheSolutionRho(points, step, "solution1.txt");//*/
 	system("pause");
 	return 0;

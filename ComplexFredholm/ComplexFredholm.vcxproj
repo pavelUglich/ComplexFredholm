@@ -125,6 +125,7 @@
     <ClInclude Include="Root.h" />
     <ClInclude Include="Stabilizer.h" />
     <ClInclude Include="SystemEvaluation.h" />
+    <ClInclude Include="vector_ops.h" />
     <ClInclude Include="VoyevodinMethod.h" />
   </ItemGroup>
   <ItemGroup>

@@ -48,6 +48,9 @@
     <ClInclude Include="SystemEvaluation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vector_ops.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Stabilizer.cpp">
