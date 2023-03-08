@@ -14,7 +14,8 @@ class matrix_system
 	vector<vector<complex<double>>> _matrix;
 	vector<complex<double>> RightPart;
 	double step;
-	vector<complex<double>> p1, p2;
+	vector<complex<double>> _p1;
+	vector<complex<double>> _p2;
 	stabilizer _stabilizer;
 
 	void multiply_ASinv();
@@ -34,32 +35,21 @@ public:
 		double step,
 		double p = 1,
 		BoundaryCondition left = Neumann,
-		BoundaryCondition right = Neumann) :
-		_matrix(A), RightPart(b), step(step) {
-		_rows = _matrix.size();
-		_columns = _matrix.front().size();
-
-//		size = b.size();
-		_stabilizer = stabilizer(_columns, step, p, left, right);
-		multiply_ASinv();
-		multiply_transpose_au();
-		QPR();
-		multiply_rx();
-	};
+		BoundaryCondition right = Neumann);;
 	//~MatrixSystem();
 
 	///<summary>
 	///Диагональ двухдиагональной матрицы;
 	///</summary>
 	vector<complex<double>> Diagonal() const {
-		return p1;
+		return _p1;
 	};
 
 	///<summary>
 	///Наддиагональ двухдиагональной матрицы;
 	///</summary>
 	vector<complex<double>> UpDiagonal() const {
-		return p2;
+		return _p2;
 	};
 
 	///<summary>

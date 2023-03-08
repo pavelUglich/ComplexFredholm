@@ -1,11 +1,16 @@
 #include "MatrixSystem.h"
 #include<vector>
 #include<cassert>
-
+#include<numeric>
 double norm(const vector<complex<double>> & v) {
-	double sum = 0;
-	for (size_t i = 0; i < v.size(); i++)
-		sum += v[i].real() * v[i].real() + v[i].imag()*v[i].imag();
+	double sum = std::accumulate(v.begin(), v.end(), 0.0,
+		[](double x, complex<double> y) 
+		{
+			const auto yy = abs(y); 
+			return x + yy * yy; 
+		});
+//	for (size_t i = 0; i < v.size(); i++)
+//		sum += v[i].real() * v[i].real() + v[i].imag()*v[i].imag();
 	return sqrt(sum);
 }
 
@@ -88,7 +93,7 @@ void matrix_system::del_col(size_t k)
 			_matrix[j][i] -= 2.0 * av[j - k] * sc;
 	}
 	for (size_t i = 0; i < l; i++) _matrix[i + k][k] = av[i];
-	p1.push_back(pp);
+	_p1.push_back(pp);
 }
 
 
@@ -119,7 +124,7 @@ void matrix_system::del_row(size_t k)
 			_matrix[i][j] -= 2.0 * av[j - k - 1] * sc;
 	}
 	for (size_t i = 0; i < l; i++) _matrix[k][i + k + 1] = av[i];
-	p2.push_back(pp);
+	_p2.push_back(pp);
 	//return pp;
 }
 
@@ -143,8 +148,8 @@ void matrix_system::multiply_transpose_au()
 void matrix_system::QPR()
 {
 	const auto size = std::min(_rows, _columns);
-	p1.clear();
-	p2.clear();
+	_p1.clear();
+	_p2.clear();
 	for (size_t i = 0; i < size; i++)
 	{
 		del_col(i);
@@ -168,6 +173,21 @@ void matrix_system::multiply_rx()
 		for (size_t j = i + 1; j < _columns; j++)
 			RightPart[j] -= 2.0 * conj(av[j]) * sc;
 	}
+}
+
+//MatrixSystem();
+
+matrix_system::matrix_system(const vector<vector<complex<double>>>& matrix, 
+	const vector<complex<double>>& b, double step, double p, 
+	BoundaryCondition left, BoundaryCondition right) :
+	_matrix(matrix), RightPart(b), step(step) {
+	_rows = _matrix.size();
+	_columns = _matrix.front().size();
+	_stabilizer = stabilizer(_columns, step, p, left, right);
+	multiply_ASinv();
+	multiply_transpose_au();
+	QPR();
+	multiply_rx();
 }
 
 ///<summary>

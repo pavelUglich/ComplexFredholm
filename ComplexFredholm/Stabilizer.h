@@ -10,9 +10,9 @@ class stabilizer
 	///Размер матрицы стабилизатора
 	size_t size;
 	///Диагональ
-	vector<double> Diagonal;
+	vector<double> _diagonal;
 	///Наддиагональ
-	vector<double> UpDiagonal;
+	vector<double> _up_diagonal;
 	/// Обработка симметричной трёхдиагональной матрицы по формулам метода квадратного корня
 	void SquareRoot();
 
