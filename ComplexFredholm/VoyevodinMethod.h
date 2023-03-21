@@ -12,11 +12,13 @@ class voyevodin_method
 	double eps;//Погрешность определения параметра регуляризации
 	double h; //Погрешность оператора
 	double delta;//Погрешность правой части
-	vector<complex<double>> RightPart, p1, p2, Qtu;
-	//size_t size;
+	vector<complex<double>> RightPart;
+	vector<complex<double>> p1;
+	vector<complex<double>> p2;
+	vector<complex<double>> Qtu;
 	size_t _rows;
 	size_t _columns;
-	vector<complex<double>> Solution;
+	vector<complex<double>> _solution;
 
 public:
 	//voyevodin_method();
@@ -56,15 +58,15 @@ public:
 			ms.multiply_qtu(RightPart),
 			_alpha_initial_value, step, h,	delta,	eps };
 		//3. Получаем решение
-		Solution = iterativeProcess.solution();
+		_solution = iterativeProcess.solution();
 		//4. Возвращаемя к изначальным неизвестнымю
-		ms.multiply_rtx(Solution);
-		ms.multiply_sinv(Solution);
+		ms.multiply_rtx(_solution);
+		ms.multiply_sinv(_solution);
 	};
 
 
 	vector<complex<double>> solution() const {
-		return Solution;
+		return _solution;
 	};
 
 };

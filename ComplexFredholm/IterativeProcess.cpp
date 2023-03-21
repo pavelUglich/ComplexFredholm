@@ -31,14 +31,13 @@ double iterative_process::_residual(vector<complex<double>> a, double alpha) {
 	return step * step * npz * npz - (delta + h * nz) * (delta + h * nz);
 }
 
-void iterative_process::iterations_run() {
-	//double AlphaS, AlphaN, ss, sn;
+void iterative_process::iterations_run() {	
 	auto alpha_s = _alpha;
 	auto alpha_n = _alpha * 0.5;
 	auto ss = _residual(_a, alpha_s);
 	auto sn = _residual(_a, alpha_n);
 	for (int i = 0; i < _iterations; i++) {
-		double alpha_ = alpha_n / (1 - (1 / alpha_s) * (alpha_s - alpha_n) * sn / (sn - ss));
+		const double alpha_ = alpha_n / (1 - (1 / alpha_s) * (alpha_s - alpha_n) * sn / (sn - ss));
 		ss = sn;
 		sn = _residual(_a, alpha_);
 		alpha_s = alpha_n;
@@ -64,7 +63,6 @@ void iterative_process::tridiag() {
 	_c.resize(_size);
 	const auto size = _p1.size();
 	_a[0] = abs(_p1[0]) * abs(_p1[0]);
-	//_a[_size - 1] = abs(_p1[_size - 1]) * abs(_p1[_size - 1]) + abs(_p2[_size - 1]) * abs(_p2[_size - 1]);
 	if (_p2.size() == _p1.size())
 	{
 		_a[size - 1] = abs(_p2[size - 1]) * abs(_p2[size - 1]);
@@ -75,7 +73,6 @@ void iterative_process::tridiag() {
 	}
 	_b[0] = conj(_p1[0]) * _p2[0];
 	_b[size - 1] = 0;
-	//#pragma omp parallel for
 	for (size_t i = 1; i < size - 1; i++) {
 		_a[i] = abs(_p2[i - 1]) * abs(_p2[i - 1]) + abs(_p1[i]) * abs(_p1[i]);
 		_b[i] = conj(_p1[i]) * _p2[i];

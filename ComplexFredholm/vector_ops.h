@@ -3,7 +3,7 @@
 
 template<class T>
 std::vector<T> operator*(const std::vector<std::vector<T>>& matrix,
-	const std::vector<double>& vector)
+	const std::vector<T>& vector)
 {
 	std::vector<T> result(matrix.size());
 	for (size_t i = 0; i < result.size(); i++)

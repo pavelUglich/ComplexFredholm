@@ -9,14 +9,16 @@ double norm(const vector<complex<double>> & v) {
 			const auto yy = abs(y); 
 			return x + yy * yy; 
 		});
-//	for (size_t i = 0; i < v.size(); i++)
-//		sum += v[i].real() * v[i].real() + v[i].imag()*v[i].imag();
 	return sqrt(sum);
 }
 
 void normalize(vector<complex<double>> & v) {
-	double NormV = norm(v);
-	for (size_t i = 0; i < v.size(); i++)	v[i] /= NormV;
+	double norm_v = norm(v);
+	if (norm_v < DBL_EPSILON)
+	{
+		return;
+	}
+	for (size_t i = 0; i < v.size(); i++)	v[i] /= norm_v;
 }
 
 complex<double> innerprod(const vector<complex<double>> & a, 
@@ -79,7 +81,7 @@ void matrix_system::del_col(size_t k)
 	vector<complex<double>> av(l);
 	for (size_t i = 0; i < l; i++)
 		av[i] = _matrix[i + k][k];//!!!
-	av[0] -= norm(av);// *av[0] / abs(av[0]);
+	av[0] -= norm(av) *av[0] / abs(av[0]);
 	normalize(av);
 	//vv Поддиагональная часть столбца матрицы
 	vector<complex<double>> vv(l);
@@ -110,7 +112,7 @@ void matrix_system::del_row(size_t k)
 	size_t l = _columns - k - 1;
 	vector<complex<double>> av(l);
 	for (size_t i = 0; i < l; i++) av[i] = _matrix[k][i + k + 1];
-	av[0] -= norm(av);// *av[0] / abs(av[0]);
+	av[0] -= norm(av) *av[0] / abs(av[0]);
 	normalize(av);
 	vector<complex<double>> vv(l);
 	for (size_t i = 0; i < l; i++) vv[i] = _matrix[k][i + k + 1];
@@ -137,15 +139,15 @@ void matrix_system::multiply_transpose_au()
 	for (size_t i = 0; i < _columns; i++) {
 		v[i] = 0;
 		for (size_t j = 0; j < _rows; j++)
-			v[i] += conj(_matrix[j][i]) * RightPart[j];
+			v[i] += conj(_matrix[j][i]) * _right_part[j];
 	}
-	RightPart = move(v);
+	_right_part = move(v);
 }
 
 ///<summary>
 ///Сведение матрицы СЛАУ к двухдиагональному виду
 ///</summary>
-void matrix_system::QPR()
+void matrix_system::qpr()
 {
 	const auto size = std::min(_rows, _columns);
 	_p1.clear();
@@ -169,9 +171,9 @@ void matrix_system::multiply_rx()
 			av[j] = _matrix[i][j];
 		complex<double> sc = 0;
 		for (size_t j = i + 1; j < _columns; j++)
-			sc += av[j] * RightPart[j];
+			sc += av[j] * _right_part[j];
 		for (size_t j = i + 1; j < _columns; j++)
-			RightPart[j] -= 2.0 * conj(av[j]) * sc;
+			_right_part[j] -= 2.0 * conj(av[j]) * sc;
 	}
 }
 
@@ -180,13 +182,13 @@ void matrix_system::multiply_rx()
 matrix_system::matrix_system(const vector<vector<complex<double>>>& matrix, 
 	const vector<complex<double>>& b, double step, double p, 
 	BoundaryCondition left, BoundaryCondition right) :
-	_matrix(matrix), RightPart(b), step(step) {
+	_matrix(matrix), _right_part(b), _step(step) {
 	_rows = _matrix.size();
 	_columns = _matrix.front().size();
 	_stabilizer = stabilizer(_columns, step, p, left, right);
 	multiply_ASinv();
 	multiply_transpose_au();
-	QPR();
+	qpr();
 	multiply_rx();
 }
 
@@ -203,7 +205,7 @@ void matrix_system::multiply_rtx(vector<complex<double>> &u) {
 			continue;
 		}
 		vector<complex<double>> a(_columns - l);
-		for (size_t j = 0; j < i; j++)
+		for (size_t j = 0; j < a.size(); j++)
 			a[j] = _matrix[l - 1][j + l];
 		complex<double> sc = 0;
 		for (size_t j = 0; j < a.size(); j++)	

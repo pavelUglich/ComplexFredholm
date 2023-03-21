@@ -13,12 +13,13 @@
 #include "Integral.h"
 #include"vector_ops.h"
 #include<functional>
+#include <fstream>
 
 const double pi = 2.0 * asin(1.0);
 
 using namespace std;
 
-#include <fstream>
+
 
 
 function<complex<double>(double)> Parameters::Mu;
@@ -35,8 +36,17 @@ double Parameters::rhoConst;
  * \param fun лямбда-выражение
  * \param stream поток вывода
  */
-void showVector(std::vector<std::complex<double>>& complexValuedVector,
-	const function<double(complex<double>)>& fun, ostream& stream);
+template<class CFDCD>
+void showVector(std::vector<std::complex<double>>& complexValuedVector,	
+	CFDCD fun, ostream& stream)
+{
+	const auto points = complexValuedVector.size();
+	for (size_t i = 0; i < points; i++)
+	{
+		stream << "[" << (i + 0.5) / points << "," << fun(complexValuedVector[i]) << "],";
+	}
+	cout << endl;
+}
 
 /**
  * \brief вывести на консоль значения функции
@@ -46,10 +56,16 @@ void showVector(std::vector<std::complex<double>>& complexValuedVector,
  * \param mapping отображение, применяемое к каждому значению функции
  * \param stream файл (или поток ввода-вывода)
  */
-void showVector(size_t points, double step,
-	const function<complex<double>(double)>& complexValuedFunction,
-	const function<double(complex<double>)>& mapping, ostream& stream);
-
+template<class CVF, class M>
+void showVector(size_t points, double step,	CVF complexValuedFunction, 
+	M mapping, ostream& stream)
+{
+	for (size_t i = 0; i < points; i++)
+	{
+		const auto x = (i + 0.5) * step;
+		stream << "(" << x << ", " << mapping(complexValuedFunction(x)) << ") ";
+	}
+}
 
 /**
  * \brief вывести в поток значения вектора
@@ -61,6 +77,7 @@ void showVector(size_t points, double step,
 void showVector(double step,
 	const std::vector<complex<double>>& complexValuedVector,
 	const function<double(complex<double>)>& mapping, ostream& stream);
+
 
 
 /**
@@ -125,9 +142,10 @@ void plotTheWaveField(double step,
 vector<complex<double>> fillUpTheVector(size_t points, double step, 
 	const function<complex<double>(double)>& function);
 
+template<class CFCDD>
 void setParameters(const size_t points, const double kappa, const double tau,
-	const double g, const double h, const function<complex<double>(double)>& gx,
-	const function<complex<double>(double)>& hx, const function<double(double)>& rho)
+	const double g, const double h, CFCDD gx, CFCDD hx, 
+	const function<double(double)>& rho)
 {
 	const complex<double> I(0, 1);
 	Parameters::muConst = (h + I * tau * kappa * g) / (tau * kappa * I + 1.0);
@@ -144,17 +162,17 @@ void setParameters(const size_t points, const double kappa, const double tau,
 	Parameters::Rho = rho;
 }
 
-
-
 map<double, vector<complex<double>>> dispersionalSet(
-	size_t points, double theHighestFrequency, double h, double tau, double g, const function<complex<double>(double)>& gx,
+	size_t points, double theHighestFrequency, double h, double tau, double g, 
+	const function<complex<double>(double)>& gx, 
 	const function<complex<double>(double)>& hx);
 
 void plotTheDispersionalCurves(
 	map<double, vector<complex<double>>>& dispersionSet,
 	const string& fileName);
 
-vector<complex<double>> evaluateTheRightPartRho(const vector<complex<double>>& left, const vector<complex<double>>& right);
+vector<complex<double>> evaluateTheRightPartRho(const vector<complex<double>>& left, 
+	const vector<complex<double>>& right);
 
 void reEvaluateParametersRho(const vector<complex<double>>& v);
 
@@ -164,16 +182,16 @@ int main()
 {
 	setlocale(LC_ALL, "Russian");
 
-	const size_t size_kappa = 10;
+	const size_t size_kappa = 40;
 	const size_t size_gamma = 20;
-	const size_t size_s = 20; // количество столбцов
+	const size_t size_s = 40; // количество столбцов
 	const double h_kappa = 1.0 / size_kappa;
 	const double h_gamma = 1.0 / size_gamma;
 	const double h_s = 1.0 / size_s;
 
 	std::vector<std::vector<complex<double>>> matrix(size_kappa);
-	const std::function<double(double, double)> kernel = [](auto x, auto s) {return 1.0 / (1 + 10 * (x - s) * (x - s)); };
-	const std::function<double(double)> exact_solution = [](auto s) {return sin(pi * s); };
+	const std::function<std::complex<double>(double, double)> kernel = [](auto x, auto s)->std::complex<double> {return { 1.0 / (1 + 10 * (x - s) * (x - s)) ,1.0 / (1 + 20 * (x - s) * (x - s)) }; };
+	const std::function<std::complex<double>(double)> exact_solution = [](auto s)->std::complex<double> {return { sin(pi * s),sin(2*pi * s) }; };
 	for (size_t i = 0; i < size_kappa; i++)
 	{
 		std::vector<complex<double>> row(size_s);
@@ -186,7 +204,7 @@ int main()
 		matrix[i] = row;
 	}
 
-	std::vector<double> exact(size_s);
+	std::vector<std::complex<double>> exact(size_s);
 	for (size_t i = 0; i < size_s; i++)
 	{
 		const double s = (i + 0.5) * h_s;
@@ -289,27 +307,9 @@ int main()
 	return 0;
 }
 
-void showVector(std::vector<std::complex<double>>& complexValuedVector,
-	const function<double(complex<double>)>& fun, ostream& stream)
-{
-	const auto points = complexValuedVector.size();
-	for (size_t i = 0; i < points; i++)
-	{
-		stream << "[" << (i + 0.5) / points << "," << fun(complexValuedVector[i]) << "],";
-	}
-	cout << endl;
-}
 
-void showVector(size_t points, double step, 
-	const function<complex<double>(double)>& complexValuedFunction, 
-	const function<double(complex<double>)>& mapping, ostream& stream)
-{
-	for (size_t i = 0; i < points; i++)
-	{
-		const auto x = (i + 0.5) * step;
-		stream << "(" << x << ", " << mapping(complexValuedFunction(x)) << ") ";
-	}
-}
+
+
 
 void showVector(double step,
 	const std::vector<complex<double>>& complexValuedVector,
@@ -536,7 +536,7 @@ void plotTheSolutionRho(size_t points, double step, const string& fileName)
 	stream << "\\begin{tikzpicture}[scale=1.5]\n";
 	stream << "\\begin{axis}[grid]\n";
 	stream << "		\\addplot[smooth, mark = *, blue] plot coordinates{\n";
-	showVector(points, step, Parameters::Rho, [](auto x) { return x.real(); }, stream);
+	showVector(points, step, Parameters::Rho, [](std::complex<double> x) { return x.real(); }, stream);
 	stream << "					};\n";
 	stream << "		\\addplot[line width = 0.25mm, smooth, black] plot coordinates{\n";
 	showVector(step, Parameters::rho, stream);
