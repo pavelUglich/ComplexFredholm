@@ -142,10 +142,9 @@ void plotTheWaveField(double step,
 vector<complex<double>> fillUpTheVector(size_t points, double step, 
 	const function<complex<double>(double)>& function);
 
-template<class CFCDD>
+template<class CFCDD, class CFDD>
 void setParameters(const size_t points, const double kappa, const double tau,
-	const double g, const double h, CFCDD gx, CFCDD hx, 
-	const function<double(double)>& rho)
+	const double g, const double h, CFCDD gx, CFCDD hx, CFDD rho)
 {
 	const complex<double> I(0, 1);
 	Parameters::muConst = (h + I * tau * kappa * g) / (tau * kappa * I + 1.0);
@@ -181,7 +180,7 @@ void plotTheSolutionRho(size_t points, double step, const string& fileName);
 int main()
 {
 	setlocale(LC_ALL, "Russian");
-
+	/*
 	const size_t size_kappa = 40;
 	const size_t size_gamma = 20;
 	const size_t size_s = 40; // количество столбцов
@@ -214,9 +213,9 @@ int main()
 	const auto right_part = matrix * exact;
 	voyevodin_method vm = { matrix, right_part, h_s, Dirichle, Dirichle };
 	const auto solution = vm.solution();
+	*/
 
-
-	/*
+	
 	const size_t points = 40;
 	const double kappa = 1.0;
 	const double tau = 0.1;
@@ -247,9 +246,12 @@ int main()
 	plotTheDispersionalCurves(dispSet, "dispSet.txt");//*/
 	//setParameters(points, kappa, tau, g, h, [](double t) {return 0.5*exp(-t); }, [](double t) {return 1.0 + 0.4 * sin(Pi*t); });
 	// решение обратной задачи
-	/*
-	setParameters(points, kappa, tau, g, h, [](double t) {return 0.5 * exp(-t); },
-		[](double t) {return 1 + 0.5 * sin(Pi * t); }, [](auto x) {return exp(-0.5*x); });
+	
+	setParameters<std::function<complex<double>(double)>, 
+		std::function<double(double)>>(points, kappa, tau, g, h, 
+			[](double t) {return 0.5 * exp(-t); },	
+			[](double t) {return 1 + 0.5 * sin(Pi * t); }, 
+			[](auto x) {return exp(-0.5*x); });
 
 	const double step = 1.0 / points;
 
@@ -339,7 +341,7 @@ void plotTheSolution(size_t points, double step, const std::string& fileName)
 	ofstream stream(fileName);
 	stream << "\\begin{tikzpicture}[scale=1.5]\n";
 	stream << "\\begin{axis}[grid]\n";
-	stream << "		\\addplot[smooth, mark = *, blue] plot coordinates{\n";
+	stream << "		\\addplot[smoo th, mark = *, blue] plot coordinates{\n";
 	showVector(points, step, Parameters::Mu, [](auto x) { return x.real(); }, stream);
 	stream << "					};\n";
 	stream << "		\\addplot[line width = 0.25mm, smooth, black] plot coordinates{\n";
