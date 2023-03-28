@@ -216,9 +216,9 @@ int main()
 	*/
 
 	
-	const size_t points = 40;
-	const double kappa = 1.0;
-	const double tau = 0.1;
+	const size_t points = 20;
+	const double kappa = 1.5;
+	const double tau = 0.2;
 	const double g = 0.5;
 	const double h = 1.0;
 	const double rightBoundary = 0.5;
@@ -250,8 +250,8 @@ int main()
 	setParameters<std::function<complex<double>(double)>, 
 		std::function<double(double)>>(points, kappa, tau, g, h, 
 			[](double t) {return 0.5 * exp(-t); },	
-			[](double t) {return 1 + 0.5 * sin(Pi * t); }, 
-			[](auto x) {return exp(-0.5*x); });
+			[](double t) {return 1 + 0.4 * sin(Pi * t); }, 
+			[](auto x) {return 1.0;/* exp(-0.5 * x)*/; });
 
 	const double step = 1.0 / points;
 
@@ -274,12 +274,13 @@ int main()
 	//reEvaluateParametersRho(solution);
 
 	SystemEvaluation<BoundaryValueProblemBrokenLine> systemEvaluationBroken = { systemEvaluationSmooth.getRoots(), kappa, points };
-	Matrix = systemEvaluationBroken.EvaluateTheKernelRho(0, 1, 0, 1, points); 	
 	auto fieldCalculated = systemEvaluationBroken.EvaluateTheRightPart(0, 1, points);
+
+/*	Matrix = systemEvaluationBroken.EvaluateTheKernelRho(0, 1, 0, 1, points);
 	rightPart = evaluateTheRightPartRho(fieldCalculated, fieldObserved);
 	cout << endl << Norma(rightPart) << endl;
 	solution = theFirstStep(Matrix, rightPart, step);
-	reEvaluateParametersRho(solution);
+	reEvaluateParametersRho(solution);*/
 	double nz;
 	int iterations = 0;
 	do
@@ -288,23 +289,25 @@ int main()
 		Matrix = systemEvaluationBroken.EvaluateTheKernel(0, 1, 0, 1, points);
 		fieldCalculated = systemEvaluationBroken.EvaluateTheRightPart(0, 1, points);
 		rightPart = evaluateTheRightPart(fieldCalculated, fieldObserved);
-		cout << endl << Norma(rightPart) << endl;
+		//cout << endl << Norma(rightPart) << endl;
 		solution = theFirstStep(Matrix, rightPart, step);
 		reEvaluateParameters(solution);
 				
-		systemEvaluationBroken = { systemEvaluationBroken.getRoots(), kappa, points };
+/*
+		systemEvaluationBroken = {systemEvaluationBroken.getRoots(), kappa, points};
 		Matrix = systemEvaluationBroken.EvaluateTheKernelRho(0, 1, 0, 1, points);
 		fieldCalculated = systemEvaluationBroken.EvaluateTheRightPart(0, 1, points);
 		rightPart = evaluateTheRightPartRho(fieldCalculated, fieldObserved);
 		solution = theFirstStep(Matrix, rightPart, step);
 		reEvaluateParametersRho(solution);		
+		*/
 		nz = Norma(rightPart);
 		cout << endl << nz << " " << ++iterations << endl;
 	}
-	while (nz > 0.1e-3 && iterations < 10);
+	while (nz > 0.1e-3 && iterations < 20);
 	plotTheWaveField(step, fieldHomogeneous, fieldCalculated, fieldObserved, "wavefield.txt");
 	plotTheSolution(points, step, "solution.txt");//
-	plotTheSolutionRho(points, step, "solution1.txt");//*/
+	//plotTheSolutionRho(points, step, "solution1.txt");//*/
 	system("pause");
 	return 0;
 }

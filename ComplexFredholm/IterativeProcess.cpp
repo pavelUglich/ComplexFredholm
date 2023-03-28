@@ -2,79 +2,81 @@
 
 
 
-vector<complex<double>> IterativeProcess::Marching(const vector<complex<double>>& a) {
-	vector<complex<double>> x(size);
-	vector<complex<double>> xi(size + 1);
-	vector<complex<double>> eta(size + 1);
+vector<complex<double>> iterative_process::_marching(const vector<complex<double>>& a) {
+	vector<complex<double>> x(_size);
+	vector<complex<double>> xi(_size + 1);
+	vector<complex<double>> eta(_size + 1);
 	xi[0] = 0;
 	eta[0] = 0;
-	for (size_t i = 0; i < size; i++) {
-		xi[i + 1] = b[i] / (a[i] - c[i] * xi[i]);
-		eta[i + 1] = (c[i] * eta[i] - RightPart[i]) / (a[i] - c[i] * xi[i]);
+	for (size_t i = 0; i < _size; i++) {
+		xi[i + 1] = _b[i] / (a[i] - _c[i] * xi[i]);
+		eta[i + 1] = (_c[i] * eta[i] - _right_part[i]) / (a[i] - _c[i] * xi[i]);
 	}
-	x[size - 1] = eta[size];
-	for (size_t i = 1; i < size; i++)
-		x[size - i - 1] = xi[size - i] * x[size - i] + eta[size - i];
+	x[_size - 1] = eta[_size];
+	for (size_t i = 1; i < _size; i++)
+		x[_size - i - 1] = xi[_size - i] * x[_size - i] + eta[_size - i];
 	return x;
 }
 
-double IterativeProcess::Residual(vector<complex<double>> a, double alpha) {
-	for (size_t i = 0; i < size; i++)
+double iterative_process::_residual(vector<complex<double>> a, double alpha) {
+	for (size_t i = 0; i < _size; i++)
 		a[i] = -a[i] - alpha;
-	Solution = Marching(a);//
-	double nz = norm(Solution);
-	vector<complex<double>> pz(size);
-	for (size_t i = 0; i < size - 1; i++) pz[i] = p1[i] * Solution[i] + p2[i] * Solution[i + 1];
-	pz[size - 1] = p1[size - 1] * Solution[size - 1];
-	for (size_t i = 0; i < size; i++) pz[i] -= Qtu[i];
+	_solution = _marching(a);//
+	double nz = norm(_solution);
+	vector<complex<double>> pz(_p1.size());
+	for (size_t i = 0; i < _p2.size() - 1; i++) pz[i] = _p1[i] * _solution[i] + _p2[i] * _solution[i + 1];
+	pz[_p1.size() - 1] = _p1[_p1.size() - 1] * _solution[_p1.size() - 1];
+	for (size_t i = 0; i < pz.size(); i++) pz[i] -= _qtu[i];
 	double npz = norm(pz);
 	return step * step * npz * npz - (delta + h * nz) * (delta + h * nz);
 }
 
-void IterativeProcess::IterationsRun() {
-	double AlphaS, AlphaN, ss, sn;
-	AlphaS = alpha;
-	AlphaN = alpha * 0.5;
-	ss = Residual(a, AlphaS);
-	sn = Residual(a, AlphaN);
-	for (int i = 0; i < Iterations; i++) {
-		double alpha_ = AlphaN / (1 - (1 / AlphaS) * (AlphaS - AlphaN) * sn / (sn - ss));
+void iterative_process::iterations_run() {
+	auto alpha_s = _alpha;
+	auto alpha_n = _alpha * 0.5;
+	auto ss = _residual(_a, alpha_s);
+	auto sn = _residual(_a, alpha_n);
+	for (int i = 0; i < _iterations; i++) {
+		const double alpha_ = alpha_n / (1 - (1 / alpha_s) * (alpha_s - alpha_n) * sn / (sn - ss));
 		ss = sn;
-		sn = Residual(a, alpha_);
-		AlphaS = AlphaN;
-		AlphaN = alpha_;
-		if (abs(AlphaS - AlphaN) < eps) break;
+		sn = _residual(_a, alpha_);
+		alpha_s = alpha_n;
+		alpha_n = alpha_;
+		if (abs(alpha_s - alpha_n) < eps) break;
 	}
 }
 
-IterativeProcess::IterativeProcess(const vector<complex<double>>& p1,
+iterative_process::iterative_process(const vector<complex<double>>& p1,
 	const vector<complex<double>>& p2,
-	const vector<complex<double>>& RightPart, const vector<complex<double>>& Qtu,
-	double Alpha, double step, double h, double delta, double eps,
-	int iterations) : p1(p1),
-	p2(p2), RightPart(RightPart), Qtu(Qtu), alpha(Alpha), step(step), h(h),
-	delta(delta), Iterations(iterations), eps(eps) 
-{
-	size = p1.size();
+	const vector<complex<double>>& RightPart,
+	const vector<complex<double>>& Qtu, double Alpha, double step, double h,
+	double delta, double eps, int iterations) : _p1(p1),
+	_p2(p2), _qtu(Qtu), _right_part(RightPart), _alpha(Alpha), step(step), h(h),
+	delta(delta), _iterations(iterations), _size(RightPart.size()), eps(eps) {
 	tridiag();
-	IterationsRun();
+	iterations_run();
 }
 
-void IterativeProcess::tridiag() {
-	a.resize(size);
-	b.resize(size);
-	c.resize(size);
-	a[0] = abs(p1[0]) * abs(p1[0]);
-	a[size - 1] = abs(p1[size - 1]) * abs(p1[size - 1]) + abs(p2[size - 1]) * abs(p2[size - 1]);
-	b[0] = conj(p1[0]) * p2[0];
-	b[size - 1] = 0;
-	//#pragma omp parallel for
-	for (size_t i = 1; i < size - 1; i++) {
-		a[i] = abs(p2[i - 1]) * abs(p2[i - 1]) + abs(p1[i]) * abs(p1[i]);
-		b[i] = conj(p1[i]) * p2[i];
+void iterative_process::tridiag() {
+	_a.resize(_size);
+	_b.resize(_size);
+	_c.resize(_size);
+	const auto size = _p1.size();
+	_a[0] = abs(_p1[0]) * abs(_p1[0]);
+	if (_p2.size() == _p1.size())
+	{
+		_a[size - 1] = abs(_p2[size - 1]) * abs(_p2[size - 1]);
 	}
-	c[0] = 0;
-	for (size_t i = 1; i < size; i++) c[i] = conj(b[i - 1]);
+	else
+	{
+		_a[size - 1] = abs(_p2[size - 2]) * abs(_p2[size - 2]) + abs(_p1[size - 1]) * abs(_p1[size - 1]);
+	}
+	_b[0] = conj(_p1[0]) * _p2[0];
+	_b[size - 1] = 0;
+	for (size_t i = 1; i < size - 1; i++) {
+		_a[i] = abs(_p2[i - 1]) * abs(_p2[i - 1]) + abs(_p1[i]) * abs(_p1[i]);
+		_b[i] = conj(_p1[i]) * _p2[i];
+	}
+	_c[0] = 0;
+	for (size_t i = 1; i < size; i++) _c[i] = conj(_b[i - 1]);
 }
-
-
